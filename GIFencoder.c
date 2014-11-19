@@ -216,3 +216,6 @@ void writeImageBlockHeader(imageStruct* image, FILE* file){
 
 //----------------------------------------------------------------------------
 //Meta Final
+void LZWCompress(FILE* file, char minCodeSize, char *pixels, int size){
+	
+}

@@ -4,6 +4,8 @@
 #define MAX_COLORS 256
 
 #include "stdio.h"
+#include "string.h"
+#include "math.h"
 
 typedef struct _imageStruct {
 	int width;
@@ -13,6 +15,13 @@ typedef struct _imageStruct {
 	int numColors;
 	char minCodeSize;
 } imageStruct;
+
+typedef struct element{
+	int index;
+	char *key;
+}Dict;
+
+int tamDict;
 
 imageStruct* GIFEncoder(unsigned char *data, int width, int height);
 void RGB2Indexed(unsigned char *data, imageStruct* image);
@@ -26,6 +35,6 @@ void writeImageBlockHeader(imageStruct* image, FILE* file);
 void writeImageBlockHeader(imageStruct* image, FILE* file);
 
 //Meta Final
-
+void LZWCompress(FILE* file, char minCodeSize, char *pixels, int size);
 
 #endif
