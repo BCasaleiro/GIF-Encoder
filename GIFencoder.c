@@ -125,7 +125,7 @@ void GIFEncoderWrite(imageStruct* image, char* outputFile) {
 	//CODIFICADOR LZW AQUI !!!!
 	//Sugestão de assinatura do método a chamar:
 	//
-	// LZWCompress(file, image->minCodeSize, image->pixels, image->width*image->height);
+	 LZWCompress(file, image);
 
 
 	fprintf(file, "%c", (char)0);
@@ -216,6 +216,27 @@ void writeImageBlockHeader(imageStruct* image, FILE* file){
 
 //----------------------------------------------------------------------------
 //Meta Final
-void LZWCompress(FILE* file, char minCodeSize, char *pixels, int size){
-	
+void LZWCompress(FILE *file, imageStruct* image){
+	Dict *dict;
+	Dict *element;
+	int size = image->height * image->width;
+	int size_dict = pow(2, (image->minCodeSize + 1));
+	int clear_code, end_of_information, img_pos;
+	int bloc_pos = 0;
+	char caract[2];
+	char buffer[4096];
+	char temp[4096];
+	char bloco[256];
+
+	clear_code = pow(2,(image->minCodeSize));
+	end_of_information = clear_code + 1;
+
+	dict = (Dict *) malloc(pow(2, image->minCodeSize) * sizeof(Dict));
+
+	for(img_pos = 0; img_pos < size; img_pos++){
+		caract[0] = image->pixels[img_pos];
+		caract[1] = '\n';
+
+
+	}
 }
