@@ -39,5 +39,8 @@ void writeImageBlockHeader(imageStruct* image, FILE* file);
 
 //Meta Final
 void LZWCompress(FILE *file, imageStruct* image);
+Dict* init_dict(imageStruct* image);
+void insert_element(Dict* dict, char* key);
+Dict* search_element(Dict* dict, char* key);
 
 #endif

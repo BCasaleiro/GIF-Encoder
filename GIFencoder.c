@@ -221,7 +221,7 @@ void LZWCompress(FILE *file, imageStruct* image){
 	Dict *element;
 	int size = image->height * image->width;
 	int size_dict = pow(2, (image->minCodeSize + 1));
-	int clear_code, end_of_information, img_pos;
+	int clear_code, end_of_information, img_pos, i, remaining_bits, nbits;
 	int bloc_pos = 0;
 	char caract[2];
 	char buffer[4096];
@@ -231,12 +231,134 @@ void LZWCompress(FILE *file, imageStruct* image){
 	clear_code = pow(2,(image->minCodeSize));
 	end_of_information = clear_code + 1;
 
-	dict = (Dict *) malloc(pow(2, image->minCodeSize) * sizeof(Dict));
+	if((dict = init_dict()) == NULL){
+		perror("ERROR!");
+		return;
+	}
 
 	for(img_pos = 0; img_pos < size; img_pos++){
 		caract[0] = image->pixels[img_pos];
 		caract[1] = '\n';
 
+		strcpy(temp,buffer);        //temp = buffer + caract
+		strcat(temp,caract);
+
+		if (bloc_pos == 255){
+			//escreve bloco no ficheiro e volta a meter posi�ao = 0
+			for (i=0;i<256;i++){
+				fprintf(file, "%c", (char)( bloco[i] ));
+				printf("Bloco[%i] -> %d\n",bloc_pos,bloco[i]);
+			}
+			//exit (0);
+			img_pos--;
+			continue;
+			bloc_pos = 0;
+		}
+
+		if (bloc_pos == 0){
+			// existe informa�ao para o bloco e estamos na posi�ao 0
+			bloco[bloc_pos] = 255;
+			bloc_pos++;
+		}
+
+		if (bloc_pos == 1 && img_pos == 0){
+			// Se é o primeiro bloco escreve na posi�ao bloco[1] o clearcode
+			bloco[bloc_pos] = (char)(clear_code);
+			nbits = numBits(clear_code);
+			remaining_bits = 8 - nbits;
+			bloc_pos++;
+		}
+
+		if (img_pos == size-1){
+			// Se � o ultimo elemento da imagem
+			//nbits = numBits(buffer);
+
+			bloco[bloc_pos]  = (char) end_of_information;
+		}
+
+		if (element= search_element(dicionario,temp)!= NULL){
+			// Encontra
+
+			strcat(buffer,caract);       // se encontra, concatena
+
+		} else {
+			//Procura o buffer
+			element = search_element(dict, buffer);
+
+
+
+			// procura o buffer
+			if (remaining_bits == 0 || remaining_bits == 8){
+				// se houver 0 ou 8 bits em atraso
+				if (remaining_bits == 8){
+					// se houver 8, entao passamos para a pos anterior e dizemos que existem zero
+					bloc_pos--;
+					remaining_bits = 0;
+				}
+				//  N�o existem bits do byte anterior para serem escritos
+				bloco[bloc_pos]  = element->index;
+				remaining_bits = 8-image->minCodeSize;
+				bloc_pos++;
+				inserirNoFim(dicionario,temp);
+				strcpy(buffer,c);
+			}
+			else if (remainingbits >0 || remainingbits<8 ){
+				// Se existem bits restantes
+				if (blocpos == 1)                       // se for na posi�ao 1 do bloco
+					previous = bloco[255];              // vai buscar o ultimo elemento do bloco anterior para previous
+					else                                    //caso contrario
+					previous = bloco[(blocpos-1)];      //vai buscar o elemento anterior
+
+					temp2 = bloco[blocpos] >> remainingbits;
+					temp3 = bloco[blocpos] << (8-remainingbits);  //cria variavel temporaria com os bits na posi�ao certa para o indice anterior
+
+					// de seguida utilizar mascara para escolher os necessarios
+					byte = previous;
+					aux =  (char)11111111;        // mascara para retirar os bits que precisamos preencher
+					aux2 = (char)11111111;
+
+					aux = aux >> remainingbits;     // mascara para o byte anterior (mete a 1 o que precisamos dele)
+					aux2 = aux2 <<(8-remainingbits);  // mascara para o byte actual (mete a 1 o que precisamos dele)
+
+					byte = previous & aux;      // liga os necessarios do anterior
+					byte2 = temp3 | aux2;       // liga os necessarios do temp3
+
+					byte = byte | byte2;
+
+					bloco[blocpos-1] = byte;
+					bloco[blocpos]= temp2;
+					blocpos++;
+
+					inserirNoFim(dicionario,temp);
+					strcpy(buffer,c);
+
+
+
+
+		}
 
 	}
+}
+
+//----------------------------------------------------------------------------
+//Funções Auxiliares
+
+Dict* init_dict(imageStruct* image){
+	Dict* dict;
+
+	if((dict = (Dict *) malloc(pow(2, image->minCodeSize) * sizeof(Dict))) != NULL){
+
+
+
+	}
+
+	return dict;
+}
+
+void insert_element(Dict* dict, char* key){
+
+}
+
+Dict* search_element(Dict* dict, char* key){
+
 }
