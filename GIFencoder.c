@@ -214,5 +214,4 @@ void writeImageBlockHeader(imageStruct* image, FILE* file){
 	fprintf(file, "%c", (char)(image->minCodeSize));
 }
 
-//----------------------------------------------------------------------------
-//Meta Final
+printf("OLA");
