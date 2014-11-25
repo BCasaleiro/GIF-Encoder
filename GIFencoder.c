@@ -214,6 +214,7 @@ void writeImageBlockHeader(imageStruct* image, FILE* file){
 	fprintf(file, "%c", (char)(image->minCodeSize));
 }
 
+
 //----------------------------------------------------------------------------
 //Meta Final
 void LZWCompress(FILE *file, imageStruct* image){
