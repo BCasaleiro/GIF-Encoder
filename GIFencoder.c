@@ -221,19 +221,20 @@ void LZWCompress(FILE *file, imageStruct* image){
 	Dict *dict;
 	Dict *element;
 	int size = image->height * image->width;
-	int size_dict = pow(2, (image->minCodeSize + 1));
+	int size_dict = pow(2, (image->minCodeSize + 1)); 					//Tamanho do dicionario
 	int clear_code, end_of_information, img_pos, i, remaining_bits, nbits;
 	int bloc_pos = 0;
 	char caract[2];
 	char buffer[4096];
 	char temp[4096];
 	char bloco[256];
+	char prev, masc, masc1, byte, byte1, temp1, temp2;
 
 	clear_code = pow(2,(image->minCodeSize));
 	end_of_information = clear_code + 1;
 
-	if((dict = init_dict()) == NULL){
-		perror("ERROR!");
+	if( (dict = init_dict(size_dict)) == NULL){
+		perror("While creating dictionary!");
 		return;
 	}
 
@@ -271,95 +272,109 @@ void LZWCompress(FILE *file, imageStruct* image){
 		}
 
 		if (img_pos == size-1){
-			// Se � o ultimo elemento da imagem
+			// Se é o ultimo elemento da imagem
 			//nbits = numBits(buffer);
 
 			bloco[bloc_pos]  = (char) end_of_information;
 		}
 
-		if (element= search_element(dicionario,temp)!= NULL){
+		if ((element = search_element(dict,temp)) != NULL){
 			// Encontra
-
-			strcat(buffer,caract);       // se encontra, concatena
+			strcat(buffer,caract);       							// se encontra, concatena
 
 		} else {
 			//Procura o buffer
 			element = search_element(dict, buffer);
 
+			if(remaining_bits == 8){
+				bloc_pos--;
+				remaining_bits = 0;
+			}
 
+			if (remaining_bits == 0){
 
-			// procura o buffer
-			if (remaining_bits == 0 || remaining_bits == 8){
-				// se houver 0 ou 8 bits em atraso
-				if (remaining_bits == 8){
-					// se houver 8, entao passamos para a pos anterior e dizemos que existem zero
-					bloc_pos--;
-					remaining_bits = 0;
-				}
-				//  N�o existem bits do byte anterior para serem escritos
+				//  Não existem bits do byte anterior para serem escritos
 				bloco[bloc_pos]  = element->index;
 				remaining_bits = 8-image->minCodeSize;
 				bloc_pos++;
-				inserirNoFim(dicionario,temp);
-				strcpy(buffer,c);
-			}
-			else if (remainingbits >0 || remainingbits<8 ){
+				insert_element(dict,temp);
+				strcpy(buffer,caract);
+
+			} else if (remaining_bits > 0){
 				// Se existem bits restantes
-				if (blocpos == 1)                       // se for na posi�ao 1 do bloco
-					previous = bloco[255];              // vai buscar o ultimo elemento do bloco anterior para previous
-					else                                    //caso contrario
-					previous = bloco[(blocpos-1)];      //vai buscar o elemento anterior
+				if (bloc_pos == 1){                       			// se for na posição 1 do bloco
+					prev = bloco[255];              				// vai buscar o ultimo elemento do bloco anterior para previous
+				} else {                                    		// caso contrario
+					prev = bloco[(bloc_pos - 1)];      				// vai buscar o elemento anterior
+				}
+					temp1 = bloco[bloc_pos] >> remaining_bits;
+					temp2 = bloco[bloc_pos] << (8-remaining_bits);  // cria variavel temporaria com os bits na posição certa para o indice anterior
 
-					temp2 = bloco[blocpos] >> remainingbits;
-					temp3 = bloco[blocpos] << (8-remainingbits);  //cria variavel temporaria com os bits na posi�ao certa para o indice anterior
+																	// de seguida utilizar mascara para escolher os necessarios
+					//byte = prev;
+					masc =  (char)11111111;        					// mascara para retirar os bits que precisamos preencher
+					masc1 = (char)11111111;
 
-					// de seguida utilizar mascara para escolher os necessarios
-					byte = previous;
-					aux =  (char)11111111;        // mascara para retirar os bits que precisamos preencher
-					aux2 = (char)11111111;
+					masc = masc >> remaining_bits;     				// mascara para o byte anterior (mete a 1 o que precisamos dele)
+					masc1 = masc1 << (8 - remaining_bits);  		// mascara para o byte actual (mete a 1 o que precisamos dele)
 
-					aux = aux >> remainingbits;     // mascara para o byte anterior (mete a 1 o que precisamos dele)
-					aux2 = aux2 <<(8-remainingbits);  // mascara para o byte actual (mete a 1 o que precisamos dele)
+					byte = prev & masc;      						// liga os necessarios do anterior
+					byte1 = temp2 | masc1;       					// liga os necessarios do temp3
 
-					byte = previous & aux;      // liga os necessarios do anterior
-					byte2 = temp3 | aux2;       // liga os necessarios do temp3
+					byte = byte | byte1;
 
-					byte = byte | byte2;
+					bloco[bloc_pos-1] = byte;
+					bloco[bloc_pos]= temp1;
+					bloc_pos++;
 
-					bloco[blocpos-1] = byte;
-					bloco[blocpos]= temp2;
-					blocpos++;
-
-					inserirNoFim(dicionario,temp);
-					strcpy(buffer,c);
-
-
-
-
+					insert_element(dict, temp);
+					strcpy(buffer,caract);
+				}
+			}
 		}
-
-	}
 }
-
 //----------------------------------------------------------------------------
 //Funções Auxiliares
 
-Dict* init_dict(imageStruct* image){
-	Dict* dict;
+Dict* init_dict(int size_dict){
+	Dict *dict;
 
-	if((dict = (Dict *) malloc(pow(2, image->minCodeSize) * sizeof(Dict))) != NULL){
+	if((dict = (Dict *) malloc(size_dict * sizeof(Dict))) != NULL){
 
-
+		//começar com o alfabeto?
 
 	}
 
 	return dict;
 }
 
-void insert_element(Dict* dict, char* key){
+void insert_element(Dict *dict, char* key){
+	int i = 0;
 
+	while(dict[i].key != NULL){
+		i++;
+	}
+
+	dict[i].index = dict[i - 1].index + 1;
+	dict[i].key = key;
 }
 
-Dict* search_element(Dict* dict, char* key){
+Dict* double_space(Dict *dict, int size_dict){
+	Dict* aux;
 
+	aux = (Dict*) realloc(dict, size_dict * sizeof(Dict));
+
+	return aux;
+}
+
+Dict* search_element(Dict dict[], char* key){
+	int i = 0;
+
+	while (dict[i++].key != NULL) {
+		if( strcmp(dict[i].key, key) == 0 ){
+			return &(dict[i]);
+		}
+	}
+
+	return NULL;
 }
