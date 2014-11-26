@@ -237,7 +237,6 @@ void LZWCompress(FILE *file, imageStruct* image){
 	for(img_pos = 0; img_pos < size; img_pos++){
 		caract[0] = image->pixels[img_pos];
 		caract[1] = '\n';
-
-
+		
 	}
 }
