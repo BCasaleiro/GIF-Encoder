@@ -3,6 +3,7 @@
 #include "stb_image.c"
 
 #include "GIFencoder.h"
+#include "GIFencoder.c"
 
 int main(int argc, char *argv[]) {
 
