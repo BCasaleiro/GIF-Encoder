@@ -3,9 +3,9 @@
 
 #define MAX_COLORS 256
 
-#include "stdio.h"
-#include "string.h"
-#include "math.h"
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
 
 typedef struct _imageStruct {
 	int width;
@@ -39,7 +39,8 @@ void writeImageBlockHeader(imageStruct* image, FILE* file);
 
 //Meta Final
 void LZWCompress(FILE *file, imageStruct* image);
-Dict* init_dict(int size_dict);
+Dict* init_dict(int size_dict, int* dict_pos, imageStruct* image);
+void reset_dict(Dict* dict);
 void insert_element(Dict* dict, char* key);
 Dict* double_space(Dict *dict, int size_dict);
 Dict* search_element(Dict* dict, char* key);
