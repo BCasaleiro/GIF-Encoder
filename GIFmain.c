@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
     int width, height, numComponents;
     unsigned char *data;
 	imageStruct* image;
-
+	
 	if (argc > 1)
 		inputFile = argv[1];
 	else
@@ -21,13 +21,11 @@ int main(int argc, char *argv[]) {
 		outputFile = argv[2];
 	else
 		outputFile = "portugalOutput.gif";
-
+	
 	printf("Loading file %s\n", inputFile);
 	printf("Writing to file %s\n", outputFile);
 
 	data = stbi_load(inputFile, &width, &height, &numComponents, STBI_rgb);
-
-	printf("cona");
 
 	if (!data && stbi_failure_reason()) {
 		printf("Error: %s\n",stbi_failure_reason());

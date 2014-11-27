@@ -1,12 +1,11 @@
 #include "GIFencoder.h"
 
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "math.h"
+#include "stdlib.h"
+#include "stdio.h"
+#include "string.h"
 
-
-// conversão de um objecto do tipo Image numa imagem indexada
+// convers�o de um objecto do tipo Image numa imagem indexada
 imageStruct* GIFEncoder(unsigned char *data, int width, int height) {
 
 	imageStruct* image = (imageStruct*)malloc(sizeof(imageStruct));
@@ -19,7 +18,7 @@ imageStruct* GIFEncoder(unsigned char *data, int width, int height) {
 	return image;
 }
 
-//conversão de lista RGB para indexada: máximo de 256 cores
+//convers�o de lista RGB para indexada: m�ximo de 256 cores
 void RGB2Indexed(unsigned char *data, imageStruct* image) {
 	int x, y, colorIndex, colorNum = 0;
 	char *copy;
@@ -54,22 +53,22 @@ void RGB2Indexed(unsigned char *data, imageStruct* image) {
 		}
 	}
 
-	//define o número de cores como potência de 2 (devido aos requistos da Global Color Table)
+	//define o n�mero de cores como pot�ncia de 2 (devido aos requistos da Global Color Table)
 	image->numColors = nextPower2(colorNum);
 
-	//refine o array de cores com base no número final obtido
+	//refine o array de cores com base no n�mero final obtido
 	copy = (char*)calloc(image->numColors*3, sizeof(char));
 	memset(copy, 0, sizeof(char)*image->numColors*3);
 	memcpy(copy, image->colors, sizeof(char)*colorNum*3);
 	image->colors = copy;
 
 	image->minCodeSize = numBits(image->numColors - 1);
-	if (image->minCodeSize == (char)1)  //imagens binárias --> caso especial (pág. 26 do RFC)
+	if (image->minCodeSize == (char)1)  //imagens bin�rias --> caso especial (p�g. 26 do RFC)
 		image->minCodeSize++;
 }
 
 
-//determinação da próxima potência de 2 de um dado inteiro n
+//determina��o da pr�xima pot�ncia de 2 de um dado inteiro n
 int nextPower2(int n) {
 	int ret = 1, nIni = n;
 
@@ -88,7 +87,7 @@ int nextPower2(int n) {
 }
 
 
-//número de bits necessário para representar n
+//n�mero de bits necess�rio para representar n
 char numBits(int n) {
 	char nb = 0;
 
@@ -104,31 +103,29 @@ char numBits(int n) {
 }
 
 
-//---- Funçãoo para escrever imagem no formato GIF, versão 87a
-//// COMPLETAR ESTA FUNÇÃO
+//---- Fun��o para escrever imagem no formato GIF, vers�o 87a
+//// COMPLETAR ESTA FUN��O
 void GIFEncoderWrite(imageStruct* image, char* outputFile) {
 
 	FILE* file = fopen(outputFile, "wb");
 	char trailer;
 
-	//Escrever cabeçalho do GIF
+	//Escrever cabe�alho do GIF
 	writeGIFHeader(image, file);
 
-	//Escrever cabeçalho do Image Block
-	// CRIAR FUNÇÃO para ESCRITA do IMAGE BLOCK HEADER!!!
-	//Sugestão da assinatura do método a chamar:
+	//Escrever cabe�alho do Image Block
+	// CRIAR FUN��O para ESCRITA do IMAGE BLOCK HEADER!!!
+	//Sugest�o da assinatura do m�todo a chamar:
 	//
-	printf("ahahahha");
-	writeImageBlockHeader(image, file);
+	//writeImageBlockHeader(image, file);
 
 	/////////////////////////////////////////
-	//Escrever blocos com 256 bytes no máximo
+	//Escrever blocos com 256 bytes no m�ximo
 	/////////////////////////////////////////
 	//CODIFICADOR LZW AQUI !!!!
-	//Sugestão de assinatura do método a chamar:
+	//Sugest�o de assinatura do m�todo a chamar:
 	//
-	printf("ola2");
-	LZWCompress(file, image);
+	// LZWCompress(file, image->minCodeSize, image->pixels, image->width*image->height);
 
 
 	fprintf(file, "%c", (char)0);
@@ -142,18 +139,18 @@ void GIFEncoderWrite(imageStruct* image, char* outputFile) {
 
 
 //--------------------------------------------------
-//gravar cabeçalho do GIF (até global color table)
+//gravar cabe�alho do GIF (at� global color table)
 void writeGIFHeader(imageStruct* image, FILE* file) {
 
 	int i;
 	char toWrite, GCTF, colorRes, SF, sz, bgci, par;
 
-	//Assinatura e versão (GIF87a)
+	//Assinatura e vers�o (GIF87a)
 	char* s = "GIF87a";
 	for (i = 0; i < (int)strlen(s); i++)
 		fprintf(file, "%c", s[i]);
 
-	//Ecrã lógico (igual à da dimensão da imagem) --> primeiro o LSB e depois o MSB
+	//Ecr� l�gico (igual � da dimens�o da imagem) --> primeiro o LSB e depois o MSB
 	fprintf(file, "%c", (char)( image->width & 0xFF));
 	fprintf(file, "%c", (char)((image->width >> 8) & 0xFF));
 	fprintf(file, "%c", (char)( image->height & 0xFF));
@@ -161,7 +158,7 @@ void writeGIFHeader(imageStruct* image, FILE* file) {
 
 	//GCTF, Color Res, SF, size of GCT
 	GCTF = 1;
-	colorRes = 7;  //número de bits por cor primária (-1)
+	colorRes = 7;  //n�mero de bits por cor prim�ria (-1)
 	SF = 0;
 	sz = numBits(image->numColors - 1) - 1; //-1: 0 --> 2^1, 7 --> 2^8
 	toWrite = (char) (GCTF << 7 | colorRes << 4 | SF << 3 | sz);
@@ -172,7 +169,7 @@ void writeGIFHeader(imageStruct* image, FILE* file) {
 	fprintf(file, "%c", bgci);
 
 	//Pixel aspect ratio
-	par = 0; // 0 --> informação sobre aspect ratio n~zo fornecida --> decoder usa valores por omissão
+	par = 0; // 0 --> informa��o sobre aspect ratio n�o fornecida --> decoder usa valores por omiss�o
 	fprintf(file, "%c",par);
 
 	//Global color table
@@ -186,8 +183,6 @@ void writeGIFHeader(imageStruct* image, FILE* file) {
 void writeImageBlockHeader(imageStruct* image, FILE* file){
 	char local_color_tflag, interface_flag, sort_flag, size_lctf, reserved;
 	char flags;
-
-	printf("ola");
 
 	// Image Separator
 	fprintf(file, "%c", (char)(0x2C));
@@ -219,214 +214,5 @@ void writeImageBlockHeader(imageStruct* image, FILE* file){
 	fprintf(file, "%c", (char)(image->minCodeSize));
 }
 
-
-//----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //Meta Final
-void LZWCompress(FILE *file, imageStruct* image){
-	Dict *dict;
-	Dict *element;
-	int size = image->height * image->width;
-	int size_dict = pow(2, (image->minCodeSize + 1)); 					//Tamanho do dicionario
-	int clear_code, end_of_information, img_pos, i, remaining_bits, nbits;
-	int bloc_pos = 0;
-	int dict_pos = 0;
-	char caract[2];
-	char buffer[4096];
-	char temp[4096];
-	char bloco[256];
-	char prev, masc, masc1, byte, byte1, temp1, temp2;
-
-	FILE* fp = fopen("out.txt", "w");
-
-	clear_code = pow(2,(image->minCodeSize));
-	end_of_information = clear_code + 1;
-
-	printf("será?");
-
-	if( (dict = init_dict(size_dict, &dict_pos, image)) == NULL){
-		perror("While creating dictionary!");
-		return;
-	}
-
-	printf("fez o dict");
-
-	for(img_pos = 0; img_pos < size; img_pos++){
-		caract[0] = image->pixels[img_pos];
-		caract[1] = '\n';
-
-		printf("Im pos: %d", img_pos);
-
-		strcpy(temp,buffer);        //temp = buffer + caract
-		strcat(temp,caract);
-
-		if (bloc_pos == 255){
-			//escreve bloco no ficheiro e volta a meter posi�ao = 0
-			for (i=0;i<256;i++){
-				fprintf(file, "%c", (char)( bloco[i] ));
-				fprintf(fp, "%d - %d \n", i, bloco[i]);
-				printf("Bloco[%i] -> %d\n",bloc_pos,bloco[i]);
-			}
-			//exit (0);
-			img_pos--;
-			continue;
-			bloc_pos = 0;
-		}
-
-		if (bloc_pos == 0){
-			// existe informa�ao para o bloco e estamos na posi�ao 0
-			bloco[bloc_pos] = 255;
-			bloc_pos++;
-		}
-
-		if (bloc_pos == 1 && img_pos == 0){
-			// Se é o primeiro bloco escreve na posi�ao bloco[1] o clearcode
-			bloco[bloc_pos] = (char)(clear_code);
-			nbits = numBits(clear_code);
-			remaining_bits = 8 - nbits;
-			bloc_pos++;
-		}
-
-		if (img_pos == size-1){
-			// Se é o ultimo elemento da imagem
-			//nbits = numBits(buffer);
-
-			bloco[bloc_pos]  = (char) end_of_information;
-		}
-
-		if ((element = search_element(dict,temp)) != NULL){
-			// Encontra
-			strcat(buffer,caract);       							// se encontra, concatena
-
-		} else {
-			//Procura o buffer
-
-			if(dict_pos == size_dict - 1){
-				size_dict = size_dict * 2;
-				if(size_dict < 4096){
-					double_space(dict, size_dict);
-				} else if(size_dict > 4096){
-					printf("Reset dictionary");
-					dict_pos = 0;
-					size_dict = pow(2, (image->minCodeSize + 1));
-					reset_dict(dict, size_dict, &dict_pos, image);
-				}
-				printf("duplicou");
-			}
-
-			if(	(element = search_element(dict, buffer)) == NULL){
-				perror("aqui");
-				return;
-			}
-
-			if(remaining_bits == 8){
-				bloc_pos--;
-				remaining_bits = 0;
-			}
-
-			if (remaining_bits == 0){
-
-				//  Não existem bits do byte anterior para serem escritos
-				bloco[bloc_pos]  = element->index;
-				remaining_bits = 8-image->minCodeSize;
-				bloc_pos++;
-				insert_element(dict, temp);
-				dict_pos++;
-				strcpy(buffer,caract);
-
-			} else if (remaining_bits > 0){
-				// Se existem bits restantes
-				if (bloc_pos == 1){                       			// se for na posição 1 do bloco
-					prev = bloco[255];              				// vai buscar o ultimo elemento do bloco anterior para previous
-				} else {                                    		// caso contrario
-					prev = bloco[(bloc_pos - 1)];      				// vai buscar o elemento anterior
-				}
-					temp1 = bloco[bloc_pos] >> remaining_bits;
-					temp2 = bloco[bloc_pos] << (8-remaining_bits);  // cria variavel temporaria com os bits na posição certa para o indice anterior
-
-																	// de seguida utilizar mascara para escolher os necessarios
-					//byte = prev;
-					masc =  (char)11111111;        					// mascara para retirar os bits que precisamos preencher
-					masc1 = (char)11111111;
-
-					masc = masc >> remaining_bits;     				// mascara para o byte anterior (mete a 1 o que precisamos dele)
-					masc1 = masc1 << (8 - remaining_bits);  		// mascara para o byte actual (mete a 1 o que precisamos dele)
-
-					byte = prev & masc;      						// liga os necessarios do anterior
-					byte1 = temp2 | masc1;       					// liga os necessarios do temp3
-
-					byte = byte | byte1;
-
-					bloco[bloc_pos-1] = byte;
-					bloco[bloc_pos]= temp1;
-					bloc_pos++;
-
-					insert_element(dict, temp);
-					dict_pos++;
-					strcpy(buffer,caract);
-				}
-			}
-		}
-		fclose(fp);
-}
-//----------------------------------------------------------------------------
-//Funções Auxiliares
-
-Dict* init_dict(int size_dict, int* dict_pos, imageStruct* image){
-	Dict *dict;
-	int i;
-	char *nkey;
-
-	if((dict = (Dict *) malloc(size_dict * sizeof(Dict))) != NULL){
-
-		for(i = 0; i < image->numColors; i++)
-		{
-			dict_pos++;
-			dict[i].index = i + 1;
-			nkey = (char*)i;
-			strcpy(dict[i].key, nkey);
-
-	}
-
-	}
-	return dict;
-}
-
-Dict* reset_dict(Dict* dict, int new_size, int* dict_pos, imageStruct* image){
-	Dict* aux;
-
-	free(dict);
-	aux= init_dict(new_size, dict_pos, image);
-
-	return aux;
-}
-
-void insert_element(Dict *dict, char* key){
-	int i = 0;
-
-	while(dict[i].key != NULL){
-		i++;
-	}
-
-	dict[i].index = dict[i - 1].index + 1;
-	dict[i].key = key;
-}
-
-Dict* double_space(Dict *dict, int size_dict){
-	Dict* aux;
-
-	aux = (Dict*) realloc(dict, size_dict * sizeof(Dict));
-
-	return aux;
-}
-
-Dict* search_element(Dict dict[], char* key){
-	int i = 0;
-
-	while (dict[i++].key != NULL) {
-		if( strcmp(dict[i].key, key) == 0 ){
-			return &(dict[i]);
-		}
-	}
-
-	return NULL;
-}
