@@ -419,7 +419,7 @@ extern int      stbi_gif_info_from_file   (FILE *f,                  int *x, int
 #endif
 
 #ifndef STBI_NO_STDIO
-#include <stdio.h>
+//#include <stdio.h>
 #endif
 #include <stdlib.h>
 #include <memory.h>

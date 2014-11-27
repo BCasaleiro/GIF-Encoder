@@ -3,7 +3,6 @@
 #include "stb_image.c"
 
 #include "GIFencoder.h"
-#include "GIFencoder.c"
 
 int main(int argc, char *argv[]) {
 
@@ -27,6 +26,8 @@ int main(int argc, char *argv[]) {
 	printf("Writing to file %s\n", outputFile);
 
 	data = stbi_load(inputFile, &width, &height, &numComponents, STBI_rgb);
+
+	printf("cona");
 
 	if (!data && stbi_failure_reason()) {
 		printf("Error: %s\n",stbi_failure_reason());

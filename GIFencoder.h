@@ -40,7 +40,7 @@ void writeImageBlockHeader(imageStruct* image, FILE* file);
 //Meta Final
 void LZWCompress(FILE *file, imageStruct* image);
 Dict* init_dict(int size_dict, int* dict_pos, imageStruct* image);
-void reset_dict(Dict* dict);
+Dict* reset_dict(Dict* dict, int new_size, int *dict_pos, imageStruct* image);
 void insert_element(Dict* dict, char* key);
 Dict* double_space(Dict *dict, int size_dict);
 Dict* search_element(Dict* dict, char* key);

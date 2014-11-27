@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
 // conversão de um objecto do tipo Image numa imagem indexada
 imageStruct* GIFEncoder(unsigned char *data, int width, int height) {
 
@@ -118,6 +117,7 @@ void GIFEncoderWrite(imageStruct* image, char* outputFile) {
 	// CRIAR FUNÇÃO para ESCRITA do IMAGE BLOCK HEADER!!!
 	//Sugestão da assinatura do método a chamar:
 	//
+	printf("ahahahha");
 	writeImageBlockHeader(image, file);
 
 	/////////////////////////////////////////
@@ -126,7 +126,8 @@ void GIFEncoderWrite(imageStruct* image, char* outputFile) {
 	//CODIFICADOR LZW AQUI !!!!
 	//Sugestão de assinatura do método a chamar:
 	//
-	 LZWCompress(file, image);
+	printf("ola2");
+	LZWCompress(file, image);
 
 
 	fprintf(file, "%c", (char)0);
@@ -185,6 +186,8 @@ void writeImageBlockHeader(imageStruct* image, FILE* file){
 	char local_color_tflag, interface_flag, sort_flag, size_lctf, reserved;
 	char flags;
 
+	printf("ola");
+
 	// Image Separator
 	fprintf(file, "%c", (char)(0x2C));
 
@@ -242,13 +245,9 @@ void LZWCompress(FILE *file, imageStruct* image){
 		return;
 	}
 
-	printf("fez o dict");
-
 	for(img_pos = 0; img_pos < size; img_pos++){
 		caract[0] = image->pixels[img_pos];
 		caract[1] = '\n';
-
-		printf("Im pos: %d", img_pos);
 
 		strcpy(temp,buffer);        //temp = buffer + caract
 		strcat(temp,caract);
@@ -300,14 +299,15 @@ void LZWCompress(FILE *file, imageStruct* image){
 					double_space(dict, size_dict);
 				} else if(size_dict > 4096){
 					printf("Reset dictionary");
-					reset_dict(dict);
 					dict_pos = 0;
+					dict = reset_dict(dict, pow(2, (image->minCodeSize + 1)), &dict_pos, image );
+					size_dict = pow(2, (image->minCodeSize + 1));
 				}
 				printf("duplicou");
 			}
 
 			if(	(element = search_element(dict, buffer)) == NULL){
-				perror("aqui");
+				perror("while searching for buffer");
 				return;
 			}
 
@@ -375,7 +375,7 @@ Dict* init_dict(int size_dict, int* dict_pos, imageStruct* image){
 		{
 			dict_pos++;
 			dict[i].index = i + 1;
-			nkey = (char*)i;
+			nkey = (char)i;
 			strcpy(dict[i].key, nkey);
 
 	}
@@ -384,8 +384,13 @@ Dict* init_dict(int size_dict, int* dict_pos, imageStruct* image){
 	return dict;
 }
 
-void reset_dict(Dict* dict){
+Dict* reset_dict(Dict* dict, int new_size, int *dict_pos, imageStruct* image){
+	Dict* aux;
 
+	free(dict);
+	aux = init_dict(new_size, dict_pos, image);
+
+	return aux;
 }
 
 void insert_element(Dict *dict, char* key){
