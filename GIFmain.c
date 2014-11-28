@@ -11,17 +11,17 @@ int main(int argc, char *argv[]) {
     int width, height, numComponents;
     unsigned char *data;
 	imageStruct* image;
-	
+
 	if (argc > 1)
 		inputFile = argv[1];
 	else
-		inputFile = "portugal.png";
+		inputFile = "../dataset/monica.png";
 
 	if (argc > 2)
 		outputFile = argv[2];
 	else
-		outputFile = "portugalOutput.gif";
-	
+		outputFile = "monicaOutput.gif";
+
 	printf("Loading file %s\n", inputFile);
 	printf("Writing to file %s\n", outputFile);
 

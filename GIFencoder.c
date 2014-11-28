@@ -1,9 +1,6 @@
 #include "GIFencoder.h"
-
-#include "math.h"
-#include "stdlib.h"
-#include "stdio.h"
-#include "string.h"
+#include "BitFile.h"
+#include "BitFile.c"
 
 // convers�o de um objecto do tipo Image numa imagem indexada
 imageStruct* GIFEncoder(unsigned char *data, int width, int height) {
@@ -17,6 +14,8 @@ imageStruct* GIFEncoder(unsigned char *data, int width, int height) {
 
 	return image;
 }
+
+
 
 //convers�o de lista RGB para indexada: m�ximo de 256 cores
 void RGB2Indexed(unsigned char *data, imageStruct* image) {
@@ -117,7 +116,7 @@ void GIFEncoderWrite(imageStruct* image, char* outputFile) {
 	// CRIAR FUN��O para ESCRITA do IMAGE BLOCK HEADER!!!
 	//Sugest�o da assinatura do m�todo a chamar:
 	//
-	//writeImageBlockHeader(image, file);
+	writeImageBlockHeader(image, file);
 
 	/////////////////////////////////////////
 	//Escrever blocos com 256 bytes no m�ximo
@@ -125,7 +124,7 @@ void GIFEncoderWrite(imageStruct* image, char* outputFile) {
 	//CODIFICADOR LZW AQUI !!!!
 	//Sugest�o de assinatura do m�todo a chamar:
 	//
-	// LZWCompress(file, image->minCodeSize, image->pixels, image->width*image->height);
+	LZWCompress(file, image->minCodeSize, image->pixels, image->width*image->height, image->numColors);
 
 
 	fprintf(file, "%c", (char)0);
@@ -216,3 +215,135 @@ void writeImageBlockHeader(imageStruct* image, FILE* file){
 
 //------------------------------------------------------------------------------
 //Meta Final
+
+void LZWCompress(FILE* file, int minCodeSize, char* pixels, int npixels, int ncolors){
+	int imgPos = 0;													// posição na imagem
+	int dictPos = 0; 												// nº de elementos no dicionário
+	int dictSize = pow(2, minCodeSize);								// tamanho do dicionário
+	int blocSize = 255;
+	int clearCode, endOfInformation, pos;
+	char* c;
+	char temp[4096];
+	char buffer[4096];
+	Dict* dict;
+	bitStream* stream = bitFile(file);
+
+	if( (dict = initDict(dictSize)) == NULL ){ 						// criação do dicionário
+		perror("While creating dictionary\nExiting...\n");
+		return;
+	}
+
+	fillDict(dict, &dictPos, ncolors); 								// inicia com o alfabeto
+	clearCode = pow(2, minCodeSize);								// clear code
+	endOfInformation = pow(2, minCodeSize) + 1;						// end of information
+
+	printf("Clear Code: %d\tEOI: %d\n", clearCode, endOfInformation);
+
+	sprintf(buffer, "%d", pixels[imgPos++]);
+
+	writeBits(stream, blocSize, sizeof(blocSize));
+	writeBits(stream, clearCode, sizeof(clearCode));
+
+	for(; imgPos < npixels; imgPos++){
+		c = malloc(ndigits(imgPos) * sizeof(char));
+		sprintf(c, "%d", pixels[imgPos]);
+
+		strcpy(temp, buffer);										// temp = buffer + c
+		strcat(temp, c);											// buffer permanece intacto
+
+		if(dictPos == dictSize){									//sempre que necessário o espaço do dicionário é duplicado
+			if(dictSize < 4096){
+				dictSize = dictSize * 2;
+				dict = doubleDictSpace(dict, dictSize);
+			}
+		}
+
+		if(searchInDict(dict, dictPos, temp) != -1){			// se (buffer + c) existir no dicionário concatena-os e continua
+			strcat(buffer, c);
+		} else {	 	 										// caso contrario insere no dicionario (buffer + c)
+
+			pos = searchInDict(dict, dictPos, buffer);
+
+			if(dictPos < 4096){									// ao chegar aos 4096 elementos o dicionário é congelado
+				insertInDict(dict, dictPos, temp);
+				dictPos++;
+			}
+			writeBits(stream, pos, sizeof(pos));
+
+			strcpy(buffer, c);
+		}
+		free(c);												// liberta a memória ocupada por c
+	}
+
+	writeBits(stream, endOfInformation, sizeof(endOfInformation));
+
+	//printDict(dict, dictPos);
+	printf("Size Dict:%d\tSize Pos: %d\n", dictSize, dictPos);
+	free(dict);
+	flush(stream);
+}
+
+Dict* initDict(int size){
+	Dict* aux;
+
+	aux = malloc(size*sizeof(Dict));
+
+	return aux;
+}
+
+void fillDict(Dict* dict, int *dictPos, int ncolors){
+	int i;
+
+	for(i = 0; i < ncolors; i++){
+		dict[i].index = i;
+		dict[i].key = malloc(ndigits(i) * sizeof(char));
+		sprintf(dict[i].key, "%d", i);
+	}
+	(*dictPos) = i;
+}
+
+int searchInDict(Dict* dict, int dictPos, char* key){
+	int i;
+
+	for(i = 0; i < dictPos; i++){
+		//printf("[Search] Dict.key: %s\tkey:%s\tcmp: %d\n", dict[i].key, key, strcmp(dict[i].key, key));
+		if(strcmp(dict[i].key, key) == 0){
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+void insertInDict(Dict *dict, int dictPos, char* key){
+	//printf("[Insert]Dict Pos: %d\tindex: %d\tkey: %s\n", dictPos, dictPos +1, key);
+	dict[dictPos].index = dictPos;
+	dict[dictPos].key = malloc(sizeof(*key));
+	strcpy(dict[dictPos].key, key);
+}
+
+Dict* doubleDictSpace(Dict *dict, int dictSize){
+
+	return (Dict*) realloc(dict, dictSize * sizeof(Dict));
+}
+
+void printDict(Dict *dict, int dictPos){
+	int i;
+	FILE* fp = fopen("test.txt", "w");
+
+	for(i = 0; i < dictPos; i++){
+		fprintf(fp, "Entrada nº%d\tIndex: %d\tKey: %s\n", i, dict[i].index, dict[i].key);
+	}
+
+	fclose(fp);
+}
+
+int ndigits(int n){
+	int n_digits = 0;
+
+	do{
+		n_digits++;
+	}while((n = n / 10) != 0);
+
+	return n_digits;
+}
