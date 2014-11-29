@@ -262,12 +262,12 @@ void LZWCompress(FILE* file, int minCodeSize, char* pixels, int npixels, int nco
 
 			pos = searchInDict(dict, dictPos, buffer);
 
+			writeBits(stream, pos, numBits(dictPos - 1));
+
 			if(dictPos < 4096){									// ao chegar aos 4096 elementos o dicionário é congelado
 				insertInDict(dict, dictPos, temp);
 				dictPos++;
 			}
-
-			writeBits(stream, pos, numBits(dictPos - 1));
 
 			strcpy(buffer, c);
 		}

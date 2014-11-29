@@ -15,12 +15,12 @@ int main(int argc, char *argv[]) {
 	if (argc > 1)
 		inputFile = argv[1];
 	else
-		inputFile = "../dataset/monica.png";
+		inputFile = "../dataset/portugal.png";
 
 	if (argc > 2)
 		outputFile = argv[2];
 	else
-		outputFile = "monicaOutput.gif";
+		outputFile = "portugalOutput.gif";
 
 	printf("Loading file %s\n", inputFile);
 	printf("Writing to file %s\n", outputFile);
