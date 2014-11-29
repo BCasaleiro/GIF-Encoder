@@ -219,9 +219,8 @@ void writeImageBlockHeader(imageStruct* image, FILE* file){
 void LZWCompress(FILE* file, int minCodeSize, char* pixels, int npixels, int ncolors){
 	int imgPos = 0;													// posição na imagem
 	int dictPos = 0; 												// nº de elementos no dicionário
-	int dictSize = pow(2, minCodeSize);								// tamanho do dicionário
-	int blocSize = 255;
-	int clearCode, endOfInformation, pos;
+	int dictSize = pow(2, minCodeSize + 1);								// tamanho do dicionário
+	int clearCode, endOfInformation, pos, numbits;
 	char* c;
 	char temp[4096];
 	char buffer[4096];
@@ -233,22 +232,20 @@ void LZWCompress(FILE* file, int minCodeSize, char* pixels, int npixels, int nco
 		return;
 	}
 
-	fillDict(dict, &dictPos, ncolors); 								// inicia com o alfabeto
 	clearCode = pow(2, minCodeSize);								// clear code
 	endOfInformation = pow(2, minCodeSize) + 1;						// end of information
-
-	printf("Clear Code: %d\tEOI: %d\n", clearCode, endOfInformation);
+	fillDict(dict, &dictPos, ncolors, clearCode, endOfInformation); // inicia com o alfabeto
 
 	sprintf(buffer, "%d", pixels[imgPos++]);
 
-	writeBits(stream, blocSize, sizeof(blocSize));
-	writeBits(stream, clearCode, sizeof(clearCode));
+	writeBits(stream, clearCode, numBits(clearCode));
 
 	for(; imgPos < npixels; imgPos++){
 		c = malloc(ndigits(imgPos) * sizeof(char));
 		sprintf(c, "%d", pixels[imgPos]);
 
-		strcpy(temp, buffer);										// temp = buffer + c
+		strcpy(temp, buffer);										// temp = buffer + "," + c
+		strcat(temp, ",");
 		strcat(temp, c);											// buffer permanece intacto
 
 		if(dictPos == dictSize){									//sempre que necessário o espaço do dicionário é duplicado
@@ -259,6 +256,7 @@ void LZWCompress(FILE* file, int minCodeSize, char* pixels, int npixels, int nco
 		}
 
 		if(searchInDict(dict, dictPos, temp) != -1){			// se (buffer + c) existir no dicionário concatena-os e continua
+			strcat(buffer, ",");
 			strcat(buffer, c);
 		} else {	 	 										// caso contrario insere no dicionario (buffer + c)
 
@@ -268,16 +266,19 @@ void LZWCompress(FILE* file, int minCodeSize, char* pixels, int npixels, int nco
 				insertInDict(dict, dictPos, temp);
 				dictPos++;
 			}
-			writeBits(stream, pos, sizeof(pos));
+			if((numbits = numBits(pos)) >= 7){
+				writeBits(stream, pos, numBits(pos));
+			} else {
+				writeBits(stream, pos, 7);
+			}
 
 			strcpy(buffer, c);
 		}
 		free(c);												// liberta a memória ocupada por c
 	}
+	writeBits(stream, endOfInformation, numBits(endOfInformation));
 
-	writeBits(stream, endOfInformation, sizeof(endOfInformation));
-
-	//printDict(dict, dictPos);
+	printDict(dict, dictPos);
 	printf("Size Dict:%d\tSize Pos: %d\n", dictSize, dictPos);
 	free(dict);
 	flush(stream);
@@ -291,7 +292,7 @@ Dict* initDict(int size){
 	return aux;
 }
 
-void fillDict(Dict* dict, int *dictPos, int ncolors){
+void fillDict(Dict* dict, int *dictPos, int ncolors, int clearCode, int endOfInformation){
 	int i;
 
 	for(i = 0; i < ncolors; i++){
@@ -299,6 +300,16 @@ void fillDict(Dict* dict, int *dictPos, int ncolors){
 		dict[i].key = malloc(ndigits(i) * sizeof(char));
 		sprintf(dict[i].key, "%d", i);
 	}
+	//clearCode
+	dict[i].index = i;
+	dict[i].key = malloc(ndigits(clearCode) * sizeof(char));
+	sprintf(dict[i].key, "%d", clearCode);
+	//endOfInformation
+	i++;
+	dict[i].index = i;
+	dict[i].key = malloc(ndigits(endOfInformation) * sizeof(char));
+	sprintf(dict[i].key, "%d", endOfInformation);
+	i++;
 	(*dictPos) = i;
 }
 
@@ -329,7 +340,7 @@ Dict* doubleDictSpace(Dict *dict, int dictSize){
 
 void printDict(Dict *dict, int dictPos){
 	int i;
-	FILE* fp = fopen("test.txt", "w");
+	FILE* fp = fopen("testDict.txt", "w");
 
 	for(i = 0; i < dictPos; i++){
 		fprintf(fp, "Entrada nº%d\tIndex: %d\tKey: %s\n", i, dict[i].index, dict[i].key);
@@ -347,3 +358,17 @@ int ndigits(int n){
 
 	return n_digits;
 }
+
+
+int decimal_binary(int n)  /* Function to convert decimal to binary.*/
+{
+	int rem, i=1, binary=0;
+	while (n!=0)
+		{
+			rem=n%2;
+			n/=2;
+			binary+=rem*i;
+			i*=10;
+		}
+		return binary;
+	}

@@ -34,13 +34,15 @@ void writeImageBlockHeader(imageStruct* image, FILE* file);
 void LZWCompress(FILE* file, int minCodeSize, char* pixels, int npixels, int ncolors);
 //Auxiliares
 Dict* initDict(int size);
-void fillDict(Dict* dict, int *dictPos, int ncolors);
+void fillDict(Dict* dict, int *dictPos, int ncolors, int clearCode, int endOfInformation);
 int searchInDict(Dict* dict, int dictPos, char* key);
 void insertInDict(Dict *dict, int dictPos, char* key);
 Dict* doubleDictSpace(Dict *dict, int dictSize);
 
 void printDict(Dict *dict, int dictPos);
 
+
+int decimal_binary(int n);
 int ndigits(int n);
 
 #endif

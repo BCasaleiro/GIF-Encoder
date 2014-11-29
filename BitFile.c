@@ -32,6 +32,8 @@ void flush(bitStream* stream) {
 void writeBits(bitStream* stream, int bits, int numbits) {
 	int i, bitsWritten = 0;
 	int numBytes = 255;
+	FILE* fp = fopen("test.txt", "a");
+
 	do {
 		if ((stream->index_ == 254 && stream->bitsLeft_ == 0) || stream->index_ > 254) {
 			fprintf(stream->output_, "%c", (char)numBytes);
@@ -40,7 +42,7 @@ void writeBits(bitStream* stream, int bits, int numbits) {
 				fprintf(stream->output_, "%c", stream->buffer_[i]);
 
 			for (i = 0; i <= numBytes; i++)
-				//printf("%d: %d\n", i + 1, stream->buffer_[i]);
+				fprintf(fp, "%d: %d\n", i + 1, stream->buffer_[i]);
 
 			stream->buffer_[0] = 0;
 			stream->index_ = 0;
@@ -61,4 +63,5 @@ void writeBits(bitStream* stream, int bits, int numbits) {
 			stream->bitsLeft_ = 8;
 		}
 	} while (numbits != 0);
+	fclose(fp);
 }
