@@ -221,11 +221,14 @@ void LZWCompress(FILE* file, int minCodeSize, char* pixels, int npixels, int nco
 	int dictPos = 0; 												// nº de elementos no dicionário
 	int dictSize = pow(2, minCodeSize + 1);								// tamanho do dicionário
 	int clearCode, endOfInformation, pos, numbits;
+	int bits = 7;
 	char* c;
 	char temp[4096];
 	char buffer[4096];
 	Dict* dict;
 	bitStream* stream = bitFile(file);
+
+	int count = 0;
 
 	if( (dict = initDict(dictSize)) == NULL ){ 						// criação do dicionário
 		perror("While creating dictionary\nExiting...\n");
@@ -266,10 +269,16 @@ void LZWCompress(FILE* file, int minCodeSize, char* pixels, int npixels, int nco
 				insertInDict(dict, dictPos, temp);
 				dictPos++;
 			}
-			if((numbits = numBits(pos)) >= 7){
+			numbits = numBits(pos);
+
+			if(numbits > bits){
+				bits++;
+			}
+
+			if(numbits == bits){
 				writeBits(stream, pos, numBits(pos));
 			} else {
-				writeBits(stream, pos, 7);
+				writeBits(stream, pos, bits);
 			}
 
 			strcpy(buffer, c);
@@ -278,8 +287,8 @@ void LZWCompress(FILE* file, int minCodeSize, char* pixels, int npixels, int nco
 	}
 	writeBits(stream, endOfInformation, numBits(endOfInformation));
 
-	printDict(dict, dictPos);
-	printf("Size Dict:%d\tSize Pos: %d\n", dictSize, dictPos);
+	//printDict(dict, dictPos);
+	//printf("Size Dict:%d\tSize Pos: %d\n", dictSize, dictPos);
 	free(dict);
 	flush(stream);
 }
@@ -358,17 +367,3 @@ int ndigits(int n){
 
 	return n_digits;
 }
-
-
-int decimal_binary(int n)  /* Function to convert decimal to binary.*/
-{
-	int rem, i=1, binary=0;
-	while (n!=0)
-		{
-			rem=n%2;
-			n/=2;
-			binary+=rem*i;
-			i*=10;
-		}
-		return binary;
-	}

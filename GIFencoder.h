@@ -41,8 +41,6 @@ Dict* doubleDictSpace(Dict *dict, int dictSize);
 
 void printDict(Dict *dict, int dictPos);
 
-
-int decimal_binary(int n);
 int ndigits(int n);
 
 #endif

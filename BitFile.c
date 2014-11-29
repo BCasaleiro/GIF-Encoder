@@ -40,7 +40,7 @@ void writeBits(bitStream* stream, int bits, int numbits) {
 
 			for (i = 0; i < numBytes; i++)
 				fprintf(stream->output_, "%c", stream->buffer_[i]);
-
+				
 			for (i = 0; i <= numBytes; i++)
 				fprintf(fp, "%d: %d\n", i + 1, stream->buffer_[i]);
 
