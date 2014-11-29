@@ -220,15 +220,12 @@ void LZWCompress(FILE* file, int minCodeSize, char* pixels, int npixels, int nco
 	int imgPos = 0;													// posição na imagem
 	int dictPos = 0; 												// nº de elementos no dicionário
 	int dictSize = pow(2, minCodeSize + 1);								// tamanho do dicionário
-	int clearCode, endOfInformation, pos, numbits;
-	int bits = 7;
+	int clearCode, endOfInformation, pos;
 	char* c;
 	char temp[4096];
 	char buffer[4096];
 	Dict* dict;
 	bitStream* stream = bitFile(file);
-
-	int count = 0;
 
 	if( (dict = initDict(dictSize)) == NULL ){ 						// criação do dicionário
 		perror("While creating dictionary\nExiting...\n");
@@ -241,7 +238,7 @@ void LZWCompress(FILE* file, int minCodeSize, char* pixels, int npixels, int nco
 
 	sprintf(buffer, "%d", pixels[imgPos++]);
 
-	writeBits(stream, clearCode, numBits(clearCode));
+	writeBits(stream, clearCode, numBits(dictPos - 1));
 
 	for(; imgPos < npixels; imgPos++){
 		c = malloc(ndigits(imgPos) * sizeof(char));
@@ -269,23 +266,14 @@ void LZWCompress(FILE* file, int minCodeSize, char* pixels, int npixels, int nco
 				insertInDict(dict, dictPos, temp);
 				dictPos++;
 			}
-			numbits = numBits(pos);
 
-			if(numbits > bits){
-				bits++;
-			}
-
-			if(numbits == bits){
-				writeBits(stream, pos, numBits(pos));
-			} else {
-				writeBits(stream, pos, bits);
-			}
+			writeBits(stream, pos, numBits(dictPos - 1));
 
 			strcpy(buffer, c);
 		}
 		free(c);												// liberta a memória ocupada por c
 	}
-	writeBits(stream, endOfInformation, numBits(endOfInformation));
+	writeBits(stream, endOfInformation, numBits(dictPos - 1));
 
 	//printDict(dict, dictPos);
 	//printf("Size Dict:%d\tSize Pos: %d\n", dictSize, dictPos);
