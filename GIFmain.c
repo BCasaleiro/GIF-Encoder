@@ -3,7 +3,6 @@
 #include "stb_image.c"
 
 #include "GIFencoder.h"
-#include "GIFencoder.c"
 
 int main(int argc, char *argv[]) {
 
@@ -16,7 +15,7 @@ int main(int argc, char *argv[]) {
 	if (argc > 1)
 		inputFile = argv[1];
 	else
-		inputFile = "portugal.png";
+		inputFile = "../dataset/portugal.png";
 
 	if (argc > 2)
 		outputFile = argv[2];

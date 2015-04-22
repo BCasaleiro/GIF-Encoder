@@ -3,9 +3,16 @@
 
 #define MAX_COLORS 256
 
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
+//#include "stdio.h"
+#include "math.h"
+#include "stdlib.h"
+#include "stdio.h"
+#include "string.h"
+
+typedef struct dictStruct {
+	int index;
+	char* key;
+} Dict;
 
 typedef struct _imageStruct {
 	int width;
@@ -16,33 +23,24 @@ typedef struct _imageStruct {
 	char minCodeSize;
 } imageStruct;
 
-
-//Meta Final
-typedef struct element{
-	int index;
-	char *key;
-}Dict;
-
-int tamDict;
-//
-
 imageStruct* GIFEncoder(unsigned char *data, int width, int height);
 void RGB2Indexed(unsigned char *data, imageStruct* image);
 int nextPower2(int n);
 char numBits(int n);
 void GIFEncoderWrite(imageStruct* image, char* outputFile);
 void writeGIFHeader(imageStruct* image, FILE* file);
+//
 void writeImageBlockHeader(imageStruct* image, FILE* file);
+void LZWCompress(FILE* file, int minCodeSize, char* pixels, int npixels, int ncolors);
+//Auxiliares
+Dict* initDict(int size);
+void fillDict(Dict* dict, int *dictPos, int ncolors, int clearCode, int endOfInformation);
+int searchInDict(Dict* dict, int dictPos, char* key);
+void insertInDict(Dict *dict, int dictPos, char* key);
+Dict* doubleDictSpace(Dict *dict, int dictSize);
 
-//Meta 1
-void writeImageBlockHeader(imageStruct* image, FILE* file);
+void printDict(Dict *dict, int dictPos);
 
-//Meta Final
-void LZWCompress(FILE *file, imageStruct* image);
-Dict* init_dict(int size_dict, int* dict_pos, imageStruct* image);
-void reset_dict(Dict* dict);
-void insert_element(Dict* dict, char* key);
-Dict* double_space(Dict *dict, int size_dict);
-Dict* search_element(Dict* dict, char* key);
+int ndigits(int n);
 
 #endif
